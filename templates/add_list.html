@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New List{% endblock %}
+
+{% block content %}
+<h2>Add New List</h2>
+<form method="POST">
+    <label>List Name:</label><br>
+    <input type="text" name="name" required><br><br>
+    <button type="submit">Create List</button>
+</form>
+{% endblock %}

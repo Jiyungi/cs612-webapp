@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Subtask{% endblock %}
+
+{% block content %}
+<h2>Add Subtask to "{{ task.title }}"</h2>
+<form method="POST">
+    <label>Subtask Title:</label><br>
+    <input type="text" name="title" required><br><br>
+    <button type="submit">Add Subtask</button>
+</form>
+{% endblock %}

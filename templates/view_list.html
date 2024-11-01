@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import render_subtasks %}
+
+{% block title %}{{ todo_list.name }}{% endblock %}
+
+{% block content %}
+<h2>{{ todo_list.name }}</h2>
+<ul>
+    {% for task in tasks %}
+        <li>
+            {{ task.title }}
+            <a href="{{ url_for('add_subtask', task_id=task.id) }}">Add Subtask</a>
+            <a href="{{ url_for('move_task', task_id=task.id) }}">Move Task</a>
+            {% if task.subtasks %}
+                <button class="toggle-btn">Toggle Subtasks</button>
+                <ul class="subtasks">
+                    {{ render_subtasks(task) }}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
+<a href="{{ url_for('add_task', list_id=todo_list.id) }}">Add Task</a>
+{% endblock %}

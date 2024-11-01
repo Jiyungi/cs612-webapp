@@ -1,0 +1,31 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header, nav, main {
+    padding: 20px;
+}
+
+nav a {
+    margin-right: 10px;
+}
+
+.flashes {
+    color: red;
+    list-style-type: none;
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+.toggle-btn {
+    margin-left: 10px;
+}
+
+.subtasks {
+    margin-left: 20px;
+}

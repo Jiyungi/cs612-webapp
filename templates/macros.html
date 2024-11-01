@@ -1,0 +1,14 @@
+{% macro render_subtasks(task) %}
+    {% for subtask in task.subtasks %}
+        <li>
+            {{ subtask.title }}
+            <a href="{{ url_for('add_subtask', task_id=subtask.id) }}">Add Subtask</a>
+            {% if subtask.subtasks %}
+                <button class="toggle-btn">Toggle Subtasks</button>
+                <ul class="subtasks">
+                    {{ render_subtasks(subtask) }}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+{% endmacro %} 
