@@ -1,42 +1,63 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../axiosInstance';
+import '../App.css';
 
 function Register() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    axios.post('/api/register', { username, password })
-      .then(response => {
-        alert('Registration successful!');
-        // Redirect to login page or automatically log in the user
-        window.location.href = '/login';
-      })
-      .catch(error => {
-        console.error('Registration error:', error);
-        const errorMessage = error.response?.data?.message || 'Registration failed';
-        alert(errorMessage);
-      });
-  };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            console.log('Attempting registration...');
+            const response = await axiosInstance.post('/register', {
+                username,
+                password
+            });
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        placeholder="Username"
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-      />
-      <button type="submit">Register</button>
-    </form>
-  );
+            console.log('Registration response:', response.data);
+
+            if (response.status === 201) {
+                navigate('/login');
+            } else {
+                setError(response.data.message || 'Registration failed');
+            }
+        } catch (err) {
+            console.error('Registration error:', err);
+            setError(err.response?.data?.message || 'An error occurred during registration');
+        }
+    };
+
+    return (
+        <div className="register-container">
+            <h2>Register</h2>
+            {error && <div className="error-message">{error}</div>}
+            <form onSubmit={handleSubmit}>
+                <div>
+                    <label>Username:</label>
+                    <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                    />
+                </div>
+                <div>
+                    <label>Password:</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+    );
 }
 
 export default Register;
