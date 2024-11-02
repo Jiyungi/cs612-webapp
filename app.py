@@ -1,7 +1,11 @@
-from flask import Flask, render_template, session, redirect, url_for, request, flash
+from flask import Flask, render_template, session, redirect, url_for, request, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_migrate import Migrate
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
 
 app = Flask(__name__)
 
@@ -19,6 +23,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'  # Redirects to login page if not authenticated
 
+# Initialize Flask-Migrate
+migrate = Migrate(app, db)
+
 
 # Define your database models here
 class User(db.Model, UserMixin):
@@ -35,7 +42,7 @@ class TodoList(db.Model):
     # Define fields for the TodoList model
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
-    # Additional fields and relationships
+    order = db.Column(db.Integer, nullable=False, default=0)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     tasks = db.relationship('Task', backref='list', lazy=True)
 
@@ -221,6 +228,54 @@ def move_task(task_id):
         flash('Task moved successfully!')
         return redirect(url_for('view_list', list_id=new_list_id))
     return render_template('move_task.html', task=task, lists=lists)
+
+
+@app.route('/list/<int:list_id>/rename', methods=['POST'])
+@login_required
+def rename_list(list_id):
+    todo_list = TodoList.query.filter_by(id=list_id, user_id=current_user.id).first_or_404()
+    new_name = request.form['name']
+    todo_list.name = new_name
+    db.session.commit()
+    flash('List renamed successfully!')
+    return redirect(url_for('view_list', list_id=list_id))
+
+
+@app.route('/reorder_lists', methods=['POST'])
+@login_required
+def reorder_lists():
+    order = request.json.get('order')
+    for index, list_id in enumerate(order):
+        todo_list = TodoList.query.get(list_id)
+        if todo_list and todo_list.user_id == current_user.id:
+            todo_list.order = index
+    db.session.commit()
+    return jsonify({'status': 'success'})
+
+
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Sign Up')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('That username is taken. Please choose a different one.')
+
+
+@app.route('/task/<int:task_id>/delete', methods=['POST'])
+@login_required
+def delete_task(task_id):
+    task = Task.query.get_or_404(task_id)
+    if task.user_id != current_user.id:
+        flash('You do not have permission to delete this task.')
+        return redirect(url_for('dashboard'))
+    db.session.delete(task)
+    db.session.commit()
+    flash('Task deleted successfully!')
+    return redirect(url_for('view_list', list_id=task.list_id))
 
 
 if __name__ == '__main__':

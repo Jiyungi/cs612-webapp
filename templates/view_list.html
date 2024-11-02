@@ -4,7 +4,7 @@
 {% block title %}{{ todo_list.name }}{% endblock %}
 
 {% block content %}
-<h2>{{ todo_list.name }}</h2>
+<h2>{{ todo_list.name }} ({{ tasks|length }} tasks, {{ tasks|selectattr('is_completed', 'eq', True)|list|length }} completed)</h2>
 <ul>
     {% for task in tasks %}
         <li>
