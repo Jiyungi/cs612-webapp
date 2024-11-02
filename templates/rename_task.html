@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Rename Task{% endblock %}
+
+{% block content %}
+<h2>Rename Task "{{ task.title }}"</h2>
+<form method="POST">
+    <label>New Task Title:</label><br>
+    <input type="text" name="title" value="{{ task.title }}" required><br><br>
+    <button type="submit">Rename Task</button>
+</form>
+{% endblock %} 

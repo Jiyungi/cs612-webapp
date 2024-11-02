@@ -4,16 +4,21 @@
 {% block title %}{{ todo_list.name }}{% endblock %}
 
 {% block content %}
-<h2>{{ todo_list.name }} ({{ tasks|length }} tasks, {{ tasks|selectattr('is_completed', 'eq', True)|list|length }} completed)</h2>
+<h2>{{ todo_list.name }} (<span id="total-count">{{ tasks|length }}</span> tasks, <span id="completed-count">{{ tasks|selectattr('is_completed', 'eq', True)|list|length }}</span> completed)</h2>
 <ul>
     {% for task in tasks %}
         <li>
+            <input type="checkbox" class="task-checkbox" data-task-id="{{ task.id }}" {% if task.is_completed %}checked{% endif %}>
             {{ task.title }}
             <a href="{{ url_for('add_subtask', task_id=task.id) }}">Add Subtask</a>
             <a href="{{ url_for('move_task', task_id=task.id) }}">Move Task</a>
+            <a href="{{ url_for('rename_task', task_id=task.id) }}">Rename Task</a>
+            <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" style="display:inline;">
+                <button type="submit">Delete</button>
+            </form>
             {% if task.subtasks %}
                 <button class="toggle-btn">Toggle Subtasks</button>
-                <ul class="subtasks">
+                <ul class="subtasks" style="display: none;">
                     {{ render_subtasks(task) }}
                 </ul>
             {% endif %}

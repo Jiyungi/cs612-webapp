@@ -1,5 +1,5 @@
 {% from 'macros.html' import render_subtasks %}
-
+{% for subtask in task.subtasks %}
 <ul>
     {{ render_subtasks(task) }}
 </ul>

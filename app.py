@@ -230,15 +230,17 @@ def move_task(task_id):
     return render_template('move_task.html', task=task, lists=lists)
 
 
-@app.route('/list/<int:list_id>/rename', methods=['POST'])
+@app.route('/list/<int:list_id>/rename', methods=['GET', 'POST'])
 @login_required
 def rename_list(list_id):
     todo_list = TodoList.query.filter_by(id=list_id, user_id=current_user.id).first_or_404()
-    new_name = request.form['name']
-    todo_list.name = new_name
-    db.session.commit()
-    flash('List renamed successfully!')
-    return redirect(url_for('view_list', list_id=list_id))
+    if request.method == 'POST':
+        new_name = request.form['name']
+        todo_list.name = new_name
+        db.session.commit()
+        flash('List renamed successfully!')
+        return redirect(url_for('view_list', list_id=list_id))
+    return render_template('rename_list.html', todo_list=todo_list)
 
 
 @app.route('/reorder_lists', methods=['POST'])
@@ -272,10 +274,72 @@ def delete_task(task_id):
     if task.user_id != current_user.id:
         flash('You do not have permission to delete this task.')
         return redirect(url_for('dashboard'))
+
+    # Recursively delete all subtasks
+    def delete_subtasks(task):
+        for subtask in task.subtasks:
+            delete_subtasks(subtask)
+            db.session.delete(subtask)
+    delete_subtasks(task)
     db.session.delete(task)
     db.session.commit()
-    flash('Task deleted successfully!')
+    flash('Task and all associated subtasks deleted successfully!')
     return redirect(url_for('view_list', list_id=task.list_id))
+
+
+def update_task_completion(task):
+    # Check if all subtasks are completed
+    all_completed = all(subtask.is_completed for subtask in task.subtasks)
+    task.is_completed = all_completed
+    db.session.commit()
+
+    # Propagate changes to parent task
+    if task.parent:
+        update_task_completion(task.parent)
+
+
+@app.route('/list/<int:list_id>/delete', methods=['POST'])
+@login_required
+def delete_list(list_id):
+    todo_list = TodoList.query.filter_by(id=list_id, user_id=current_user.id).first_or_404()
+    # Delete all tasks associated with this list
+    Task.query.filter_by(list_id=list_id).delete()
+    # Now delete the list
+    db.session.delete(todo_list)
+    db.session.commit()
+    flash('List and all associated tasks deleted successfully!')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/task/<int:task_id>/rename', methods=['GET', 'POST'])
+@login_required
+def rename_task(task_id):
+    task = Task.query.get_or_404(task_id)
+    if task.user_id != current_user.id:
+        flash('You do not have permission to rename this task.')
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        new_title = request.form['title']
+        task.title = new_title
+        db.session.commit()
+        flash('Task renamed successfully!')
+        return redirect(url_for('view_list', list_id=task.list_id))
+    return render_template('rename_task.html', task=task)
+
+
+@app.route('/task/<int:task_id>/toggle_complete', methods=['POST'])
+@login_required
+def toggle_task_completion(task_id):
+    task = Task.query.get_or_404(task_id)
+    if task.user_id != current_user.id:
+        flash('You do not have permission to modify this task.')
+        return redirect(url_for('dashboard'))
+    # Toggle the completion status
+    task.is_completed = not task.is_completed
+    db.session.commit()
+    # Update the completion status of parent tasks if necessary
+    update_task_completion(task)
+    return jsonify({'status': 'success', 'is_completed': task.is_completed})
 
 
 if __name__ == '__main__':
