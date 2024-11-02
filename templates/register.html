@@ -4,11 +4,20 @@
 
 {% block content %}
 <h2>Register</h2>
-<form method="POST">
+<form method="POST" onsubmit="return validateForm()">
     <label>Username:</label><br>
-    <input type="text" name="username" required><br>
+    <input type="text" name="username" required minlength="3" maxlength="150" placeholder="Username"><br>
     <label>Password:</label><br>
-    <input type="password" name="password" required><br><br>
+    <input type="password" name="password" required minlength="6" placeholder="Password"><br>
+    <label>Confirm Password:</label><br>
+    <input type="password" name="confirm_password" required minlength="6" placeholder="Confirm Password"><br><br>
     <button type="submit">Register</button>
 </form>
+
+<script>
+function validateForm() {
+    // Add custom validation logic here if needed
+    return true;
+}
+</script>
 {% endblock %}

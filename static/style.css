@@ -29,3 +29,13 @@ ul {
 .subtasks {
     margin-left: 20px;
 }
+
+@media (max-width: 600px) {
+    body {
+        font-size: 14px;
+    }
+    nav a {
+        display: block;
+        margin-bottom: 10px;
+    }
+}

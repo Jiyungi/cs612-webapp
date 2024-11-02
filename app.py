@@ -1,7 +1,11 @@
-from flask import Flask, render_template, session, redirect, url_for, request, flash
+from flask import Flask, render_template, session, redirect, url_for, request, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_migrate import Migrate
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
 
 app = Flask(__name__)
 
@@ -19,6 +23,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'  # Redirects to login page if not authenticated
 
+# Initialize Flask-Migrate
+migrate = Migrate(app, db)
+
 
 # Define your database models here
 class User(db.Model, UserMixin):
@@ -35,7 +42,7 @@ class TodoList(db.Model):
     # Define fields for the TodoList model
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
-    # Additional fields and relationships
+    order = db.Column(db.Integer, nullable=False, default=0)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     tasks = db.relationship('Task', backref='list', lazy=True)
 
@@ -74,7 +81,7 @@ def register():
             flash('Username already exists. Please choose a different one.')
             return redirect(url_for('register'))
         # Hash the password and create a new user
-        hashed_password = generate_password_hash(password)
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         new_user = User(username=username, password=hashed_password)
         # Add the user to the database
         db.session.add(new_user)
@@ -221,6 +228,118 @@ def move_task(task_id):
         flash('Task moved successfully!')
         return redirect(url_for('view_list', list_id=new_list_id))
     return render_template('move_task.html', task=task, lists=lists)
+
+
+@app.route('/list/<int:list_id>/rename', methods=['GET', 'POST'])
+@login_required
+def rename_list(list_id):
+    todo_list = TodoList.query.filter_by(id=list_id, user_id=current_user.id).first_or_404()
+    if request.method == 'POST':
+        new_name = request.form['name']
+        todo_list.name = new_name
+        db.session.commit()
+        flash('List renamed successfully!')
+        return redirect(url_for('view_list', list_id=list_id))
+    return render_template('rename_list.html', todo_list=todo_list)
+
+
+@app.route('/reorder_lists', methods=['POST'])
+@login_required
+def reorder_lists():
+    order = request.json.get('order')
+    for index, list_id in enumerate(order):
+        todo_list = TodoList.query.get(list_id)
+        if todo_list and todo_list.user_id == current_user.id:
+            todo_list.order = index
+    db.session.commit()
+    return jsonify({'status': 'success'})
+
+
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Sign Up')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('That username is taken. Please choose a different one.')
+
+
+@app.route('/task/<int:task_id>/delete', methods=['POST'])
+@login_required
+def delete_task(task_id):
+    task = Task.query.get_or_404(task_id)
+    if task.user_id != current_user.id:
+        flash('You do not have permission to delete this task.')
+        return redirect(url_for('dashboard'))
+
+    # Recursively delete all subtasks
+    def delete_subtasks(task):
+        for subtask in task.subtasks:
+            delete_subtasks(subtask)
+            db.session.delete(subtask)
+    delete_subtasks(task)
+    db.session.delete(task)
+    db.session.commit()
+    flash('Task and all associated subtasks deleted successfully!')
+    return redirect(url_for('view_list', list_id=task.list_id))
+
+
+def update_task_completion(task):
+    # Check if all subtasks are completed
+    all_completed = all(subtask.is_completed for subtask in task.subtasks)
+    task.is_completed = all_completed
+    db.session.commit()
+
+    # Propagate changes to parent task
+    if task.parent:
+        update_task_completion(task.parent)
+
+
+@app.route('/list/<int:list_id>/delete', methods=['POST'])
+@login_required
+def delete_list(list_id):
+    todo_list = TodoList.query.filter_by(id=list_id, user_id=current_user.id).first_or_404()
+    # Delete all tasks associated with this list
+    Task.query.filter_by(list_id=list_id).delete()
+    # Now delete the list
+    db.session.delete(todo_list)
+    db.session.commit()
+    flash('List and all associated tasks deleted successfully!')
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/task/<int:task_id>/rename', methods=['GET', 'POST'])
+@login_required
+def rename_task(task_id):
+    task = Task.query.get_or_404(task_id)
+    if task.user_id != current_user.id:
+        flash('You do not have permission to rename this task.')
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        new_title = request.form['title']
+        task.title = new_title
+        db.session.commit()
+        flash('Task renamed successfully!')
+        return redirect(url_for('view_list', list_id=task.list_id))
+    return render_template('rename_task.html', task=task)
+
+
+@app.route('/task/<int:task_id>/toggle_complete', methods=['POST'])
+@login_required
+def toggle_task_completion(task_id):
+    task = Task.query.get_or_404(task_id)
+    if task.user_id != current_user.id:
+        flash('You do not have permission to modify this task.')
+        return redirect(url_for('dashboard'))
+    # Toggle the completion status
+    task.is_completed = not task.is_completed
+    db.session.commit()
+    # Update the completion status of parent tasks if necessary
+    update_task_completion(task)
+    return jsonify({'status': 'success', 'is_completed': task.is_completed})
 
 
 if __name__ == '__main__':
