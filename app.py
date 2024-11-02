@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, url_for, request, flash, jsonify
+from flask import Flask, send_from_directory,render_template, session, redirect, url_for, request, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,8 +6,11 @@ from flask_migrate import Migrate
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
+from flask_cors import CORS
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../my-todo-app/build', static_url_path='')
+CORS(app)
 
 # Set the secret key
 app.secret_key = 'b7f3c9a8d1e4f5b6c7d8e9f0a1b2c3d4'
@@ -66,7 +69,7 @@ def load_user(user_id):
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return send_from_directory(app.static_folder, 'index.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -107,7 +110,7 @@ def login():
         else:
             flash('Invalid username or password.')
             return redirect(url_for('login'))
-    return render_template('login.html')
+    #return render_template('login.html')
 
 
 @app.route('/dashboard')
@@ -340,6 +343,23 @@ def toggle_task_completion(task_id):
     # Update the completion status of parent tasks if necessary
     update_task_completion(task)
     return jsonify({'status': 'success', 'is_completed': task.is_completed})
+
+
+# Add a route to serve the React app
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react_app(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
+
+# Example API route
+@app.route('/api/tasks', methods=['GET'])
+@login_required
+def get_tasks():
+    tasks = Task.query.filter_by(user_id=current_user.id).all()
+    return jsonify([task.to_dict() for task in tasks])
 
 
 if __name__ == '__main__':
