@@ -1,0 +1,20 @@
+{% macro render_subtasks(subtasks) %}
+    {% for subtask in subtasks %}
+        <li>
+            <input type="checkbox" class="task-checkbox" data-task-id="{{ subtask.id }}" {% if subtask.is_completed %}checked{% endif %}>
+            {{ subtask.title }}
+            <a href="{{ url_for('subtask.add_subtask', task_id=subtask.id) }}">Add Subtask</a>
+            <a href="{{ url_for('list.rename_task', task_id=subtask.id) }}">Rename Subtask</a>
+            <form method="POST" action="{{ url_for('list.delete_task', task_id=subtask.id) }}" style="display:inline;">
+                <button type="submit">Delete</button>
+            </form>
+
+            {% if subtask.subtasks %}
+                <button class="toggle-btn" onclick="toggleSubtasks(this)">Toggle Subtasks</button>
+                <ul class="subtasks" style="display: none;">
+                    {{ render_subtasks(subtask.subtasks) }}  {# Recursive call #}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+{% endmacro %}

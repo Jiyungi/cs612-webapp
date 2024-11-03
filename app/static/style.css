@@ -1,0 +1,170 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f6f9;
+}
+
+header, nav, main {
+    padding: 20px;
+}
+
+nav a {
+    margin-right: 10px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Flash Messages */
+.flashes {
+    color: blue;
+    list-style-type: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+/* Layout for Lists */
+.list-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.list-box {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 15px;
+    width: 260px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Header and Action Icons */
+.list-header, .task-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: bold;
+}
+
+button {
+    background: none;
+    border: none;
+    color: #333;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+button:hover {
+    color: #007bff;
+}
+
+.toggle-btn, .add-btn, .action-btn {
+    margin-left: 5px;
+    font-size: 16px;
+    color: #333;
+}
+
+.toggle-btn:hover, .add-btn:hover, .action-btn:hover {
+    color: #007bff;
+}
+
+/* Task and Subtask Lists */
+ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.task-list, .subtask-list {
+    margin-top: 10px;
+    padding-left: 15px;
+}
+
+.subtask-list li {
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.subtasks {
+    margin-left: 20px;
+}
+
+/* Form and Input Styling */
+input[type="text"] {
+    padding: 5px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 70%;
+}
+
+button[type="submit"] {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* Hidden Elements */
+.hidden {
+    display: none;
+}
+
+/* Responsive Design for Smaller Screens */
+@media (max-width: 600px) {
+    body {
+        font-size: 14px;
+    }
+
+    nav a {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .list-box {
+        width: 100%;
+    }
+
+    input[type="text"] {
+        width: 60%;
+    }
+}
+
+/* Additional Styling for Hover Effects and Interactivity */
+.list-box:hover {
+    border-color: #007bff;
+}
+
+.list-box .list-header:hover {
+    cursor: pointer;
+}
+
+.add-list-btn {
+    display: inline-flex;
+    align-items: center;
+    font-size: 18px;
+    color: #007bff;
+    margin-top: 20px;
+    text-decoration: none;
+}
+
+.add-list-btn i {
+    margin-right: 5px;
+}
+
+.add-list-btn:hover {
+    text-decoration: underline;
+}

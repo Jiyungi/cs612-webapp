@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import render_subtasks %}  {# Ensure render_subtasks is defined to handle nested subtasks #}
+
+{% block title %}{{ todo_list.name }}{% endblock %}
+
+{% block content %}
+<h2>{{ todo_list.name }} (<span id="total-count">{{ tasks|length }}</span> tasks, <span id="completed-count">{{ tasks|selectattr('is_completed', 'eq', True)|list|length }}</span> completed)</h2>
+
+<ul>
+    {% for task in tasks %}
+        <li>
+            <input type="checkbox" class="task-checkbox" data-task-id="{{ task.id }}" {% if task.is_completed %}checked{% endif %}>
+            {{ task.title }}
+            <a href="{{ url_for('subtask.add_subtask', task_id=task.id) }}">Add Subtask</a>
+            <a href="{{ url_for('list.move_task', task_id=task.id) }}">Move Task</a>
+            <a href="{{ url_for('list.rename_task', task_id=task.id) }}">Rename Task</a>
+            <form method="POST" action="{{ url_for('list.delete_task', task_id=task.id) }}" style="display:inline;">
+                <button type="submit">Delete</button>
+            </form>
+
+            {% if task.subtasks %}
+                <button class="toggle-btn" onclick="toggleSubtasks(this)">Toggle Subtasks</button>
+                <ul class="subtasks" style="display: none;">
+                    {{ render_subtasks(task.subtasks) }}  {# Render subtasks using a macro #}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
+
+<a href="{{ url_for('list.add_task', list_id=todo_list.id) }}">Add Task</a>
+
+<script>
+function toggleSubtasks(button) {
+    const subtasks = button.nextElementSibling;
+    if (subtasks.style.display === "none") {
+        subtasks.style.display = "block";
+        button.textContent = "Hide Subtasks";
+    } else {
+        subtasks.style.display = "none";
+        button.textContent = "Toggle Subtasks";
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Task{% endblock %}
+
+{% block content %}
+<h2>Add Task to "{{ todo_list.name }}"</h2>
+<form action="{{ url_for('task.add_task', list_id=todo_list.id) }}" method="POST">
+    {{ form.hidden_tag() }}  <!-- Include CSRF token for protection -->
+    
+    <label>Task Title:</label><br>
+    <input type="text" name="task_name" placeholder="Enter task title" required><br><br>  <!-- Ensure the input name matches what you expect in your route -->
+    
+    <button type="submit">Add Task</button>
+</form>
+{% endblock %}

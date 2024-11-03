@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Your Todo Lists</h2>
+<div class="list-container">
+    {% for todo_list in todo_lists %}
+        <div class="list-box" ondrop="drop(event, {{ todo_list.id }})" ondragover="allowDrop(event)">
+            <div class="list-header">
+                <span onclick="toggleVisibility('list-{{ todo_list.id }}-tasks')" style="cursor: pointer;">
+                    {{ todo_list.name }}
+                </span>
+                <button type="button" class="action-btn" onclick="toggleVisibility('list-{{ todo_list.id }}-actions')" aria-label="Toggle List Actions">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                
+                <div id="list-{{ todo_list.id }}-actions" class="list-actions hidden">
+                    <form action="{{ url_for('list.delete_list', list_id=todo_list.id) }}" method="POST" style="display:inline;">
+                        {{ form.hidden_tag() }}
+                        <button type="submit" class="action-btn" onclick="return confirm('Are you sure you want to delete this list?')" aria-label="Delete List">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                    <form action="{{ url_for('list.rename_list', list_id=todo_list.id) }}" method="POST" style="display:inline;">
+                        {{ form.hidden_tag() }}
+                        <input type="text" name="new_name" placeholder="Rename List" required>
+                        <button type="submit" class="action-btn" aria-label="Rename List">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <form action="{{ url_for('task.add_task', list_id=todo_list.id) }}" method="POST">
+                {{ form.hidden_tag() }}
+                <input type="text" name="task_name" placeholder="New Task" required>
+                <button type="submit" class="add-btn" aria-label="Add Task">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </form>
+
+            <ul id="list-{{ todo_list.id }}-tasks" class="task-list hidden">
+                {% for task in todo_list.top_level_tasks %}
+                    <li id="task-{{ task.id }}" draggable="true" ondragstart="drag(event)">
+                        <div class="task-header">
+                            <input type="checkbox" onchange="toggleTaskComplete({{ task.id }}, this.checked)" {% if task.is_completed %}checked{% endif %}>
+                            <span onclick="toggleVisibility('task-{{ task.id }}-subtasks')" style="cursor: pointer;">{{ task.name }}</span>
+                            <button type="button" class="toggle-btn" onclick="toggleVisibility('task-{{ task.id }}-actions')" aria-label="Toggle Task Actions">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="task-{{ task.id }}-actions" class="task-actions hidden">
+                            <form action="{{ url_for('task.delete_task', task_id=task.id) }}" method="POST" style="display:inline;">
+                                {{ form.hidden_tag() }}
+                                <button type="submit" class="action-btn" onclick="return confirm('Are you sure you want to delete this task?')" aria-label="Delete Task">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            <form action="{{ url_for('task.rename_task', task_id=task.id) }}" method="POST" style="display:inline;">
+                                {{ form.hidden_tag() }}
+                                <input type="text" name="new_title" placeholder="Rename Task" required>
+                                <button type="submit" class="action-btn" aria-label="Rename Task">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <form action="{{ url_for('subtask.add_subtask', task_id=task.id) }}" method="POST">
+                            {{ form.hidden_tag() }}
+                            <input type="text" name="title" placeholder="New Subtask" required>
+                            <button type="submit" class="add-btn" aria-label="Add Subtask">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </form>
+
+                        <ul id="task-{{ task.id }}-subtasks" class="subtask-list hidden">
+                            {% for subtask in task.subtasks %}
+                                <li id="subtask-{{ subtask.id }}">
+                                    <input type="checkbox" onchange="toggleTaskComplete({{ subtask.id }}, this.checked)" {% if subtask.is_completed %}checked{% endif %}>
+                                    <span onclick="toggleVisibility('subtask-{{ subtask.id }}-subsubtasks')" style="cursor: pointer;">{{ subtask.name }}</span>
+                                    <button type="button" class="toggle-btn" onclick="toggleVisibility('subtask-{{ subtask.id }}-actions')" aria-label="Toggle Subtask Actions">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </button>
+                                    
+                                    <div id="subtask-{{ subtask.id }}-actions" class="subtask-actions hidden">
+                                        <form action="{{ url_for('subtask.rename_subtask', subtask_id=subtask.id) }}" method="POST" style="display:inline;">
+                                            {{ form.hidden_tag() }}
+                                            <input type="text" name="new_title" placeholder="Rename Subtask" required>
+                                            <button type="submit" class="action-btn" aria-label="Rename Subtask">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </form>
+                                        <form action="{{ url_for('subtask.delete_subtask', subtask_id=subtask.id) }}" method="POST" style="display:inline;">
+                                            {{ form.hidden_tag() }}
+                                            <button type="submit" class="action-btn" onclick="return confirm('Are you sure you want to delete this subtask?')" aria-label="Delete Subtask">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Form to add sub-subtask under each subtask -->
+                                    <form action="{{ url_for('subtask.add_subtask', task_id=subtask.id) }}" method="POST">
+                                        {{ form.hidden_tag() }}
+                                        <input type="text" name="title" placeholder="New Sub-subtask" required>
+                                        <button type="submit" class="add-btn" aria-label="Add Sub-subtask">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </form>
+
+                                    <ul id="subtask-{{ subtask.id }}-subsubtasks" class="subtask-list hidden">
+                                        {% for sub_subtask in subtask.subtasks %}
+                                            <li id="sub-subtask-{{ sub_subtask.id }}">
+                                                <input type="checkbox" onchange="toggleTaskComplete({{ sub_subtask.id }}, this.checked)" {% if sub_subtask.is_completed %}checked{% endif %}>
+                                                {{ sub_subtask.name }}
+                                                <button type="button" class="toggle-btn" onclick="toggleVisibility('sub-subtask-{{ sub_subtask.id }}-actions')" aria-label="Toggle Sub-subtask Actions">
+                                                    <i class="fas fa-ellipsis-h"></i>
+                                                </button>
+                                                
+                                                <div id="sub-subtask-{{ sub_subtask.id }}-actions" class="subtask-actions hidden">
+                                                    <form action="{{ url_for('subtask.rename_subtask', subtask_id=sub_subtask.id) }}" method="POST" style="display:inline;">
+                                                        {{ form.hidden_tag() }}
+                                                        <input type="text" name="new_title" placeholder="Rename Sub-subtask" required>
+                                                        <button type="submit" class="action-btn" aria-label="Rename Sub-subtask">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ url_for('subtask.delete_subtask', subtask_id=sub_subtask.id) }}" method="POST" style="display:inline;">
+                                                        {{ form.hidden_tag() }}
+                                                        <button type="submit" class="action-btn" onclick="return confirm('Are you sure you want to delete this sub-subtask?')" aria-label="Delete Sub-subtask">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+</div>
+<a href="{{ url_for('list.add_list') }}" class="add-list-btn">
+    <i class="fas fa-plus"></i> Add New List
+</a>
+
+<script>
+    const csrfToken = "{{ csrf_token() }}";
+
+    function toggleVisibility(id) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.classList.toggle('hidden');
+        }
+    }
+
+    function toggleTaskComplete(taskId, isCompleted) {
+        fetch(`/task/${taskId}/toggle_complete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ is_completed: isCompleted })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(error => {
+                    throw new Error(error.message || 'Failed to update task completion');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                console.log('Task completion status updated successfully');
+                
+                // Check if the task was marked for deletion
+                if (data.deleted) {
+                    // If task was deleted, remove it from the DOM immediately
+                    const taskElement = document.getElementById(`task-${taskId}`);
+                    const subtaskElement = document.getElementById(`subtask-${taskId}`);
+                    const subSubtaskElement = document.getElementById(`sub-subtask-${taskId}`);
+                    
+                    // Try to remove the element from one of the possible task types
+                    if (taskElement) {
+                        taskElement.remove();
+                    } else if (subtaskElement) {
+                        subtaskElement.remove();
+                    } else if (subSubtaskElement) {
+                        subSubtaskElement.remove();
+                    }
+                } else {
+                    console.log('Task marked as complete but not deleted');
+                }
+            } else {
+                console.error('Failed to update task completion');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update task completion: ' + error.message);
+        });
+    }
+
+    function allowDrop(event) {
+        event.preventDefault();
+    }
+
+    function drag(event) {
+        event.dataTransfer.setData("text/plain", event.target.id);
+    }
+
+    function drop(event, listId) {
+        event.preventDefault();
+        const taskId = event.dataTransfer.getData("text/plain").split('-')[1];
+        
+        fetch(`/task/${taskId}/move`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ list_id: listId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(`Response error: ${text}`); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(`Failed to move task: ${error.message}`);
+        });
+    }
+</script>
+
+<style>
+    .hidden { display: none; }
+    .list-container { display: flex; flex-wrap: wrap; gap: 20px; }
+    .list-box { border: 1px solid #ccc; padding: 15px; width: 200px; border-radius: 5px; }
+    .task-header, .list-header { display: flex; align-items: center; justify-content: space-between; }
+    .toggle-btn, .action-btn, .add-btn { background: none; border: none; cursor: pointer; font-size: 1rem; margin-left: 5px; color: #666; }
+    .toggle-btn:hover, .action-btn:hover, .add-btn:hover { color: #333; }
+    .add-list-btn { display: flex; align-items: center; margin-top: 20px; font-size: 1.2rem; text-decoration: none; color: #007bff; }
+    .add-list-btn i { margin-right: 5px; }
+    .subtask-list, .task-list { margin-top: 10px; padding-left: 15px; }
+</style>
+{% endblock %}
