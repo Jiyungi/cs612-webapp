@@ -5,11 +5,13 @@ from flask_migrate import Migrate
 from flask_wtf import CSRFProtect  # Import CSRFProtect for CSRF protection
 from config import Config
 
+# Initialize the SQLAlchemy database instance
 db = SQLAlchemy()
 csrf = CSRFProtect()  # Initialize CSRFProtect
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 
+# Factory function to create and configure the Flask app
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)

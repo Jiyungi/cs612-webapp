@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 
-{% block title %}Add Subtask{% endblock %}
+{% block title %}Add Subtask{% endblock %} <!-- Sets the page title to "Add Subtask" -->
 
 {% block content %}
-<h2>Add Subtask to "{{ task.title }}"</h2>
-<form action="{{ url_for('subtask.add_subtask', task_id=task.id) }}" method="POST">
+<h2>Add Subtask to "{{ task.title }}"</h2> <!-- Header indicating the task to which the subtask will be added -->
+<form action="{{ url_for('subtask.add_subtask', task_id=task.id) }}" method="POST"> <!-- Form to add a new subtask, submitting to the specified route -->
     {{ form.hidden_tag() }}  <!-- Include CSRF token for protection -->
     
-    <label>Subtask Title:</label><br>
-    <input type="text" name="title" placeholder="Enter subtask title" required><br><br>
+    <label>Subtask Title:</label><br> <!-- Label for the subtask title input field -->
+    <input type="text" name="title" placeholder="Enter subtask title" required><br><br> <!-- Input field for the subtask title, marked as required -->
     
-    <button type="submit">Add Subtask</button>
+    <button type="submit">Add Subtask</button> <!-- Submit button for the form -->
 </form>
 {% endblock %}

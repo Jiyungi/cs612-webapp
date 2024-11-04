@@ -2,36 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Hierarchical Todo List App{% endblock %}</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <title>{% block title %}Hierarchical Todo List App{% endblock %}</title> <!-- Title block for dynamic page titles -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}"> <!-- Link to the main stylesheet -->
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- Font Awesome for icons -->
 </head>
 <body>
     <header>
-        <h1>Hierarchical Todo List App</h1>
+        <h1>Hierarchical Todo List App</h1> <!-- Main header for the application -->
     </header>
     <nav>
-        <a href="{{ url_for('main.home') }}"><i class="fas fa-home"></i> Home</a>
+        <!-- Navigation links -->
+        <a href="{{ url_for('main.home') }}"><i class="fas fa-home"></i> Home</a> <!-- Link to the home page -->
         {% if current_user.is_authenticated %}
-            <a href="{{ url_for('list.dashboard') }}"><i class="fas fa-list"></i> Dashboard</a>
-            <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <!-- Links visible only to authenticated users -->
+            <a href="{{ url_for('list.dashboard') }}"><i class="fas fa-list"></i> Dashboard</a> <!-- Link to the dashboard -->
+            <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a> <!-- Logout link -->
         {% else %}
-            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
-            <a href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> Register</a>
+            <!-- Links visible only to unauthenticated users -->
+            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a> <!-- Login link -->
+            <a href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> Register</a> <!-- Register link -->
         {% endif %}
     </nav>
     <main>
+        <!-- Display flashed messages -->
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 <ul class="flashes">
                     {% for message in messages %}
-                        <li><i class="fas fa-info-circle"></i> {{ message }}</li>
+                        <li><i class="fas fa-info-circle"></i> {{ message }}</li> <!-- Display each message -->
                     {% endfor %}
                 </ul>
             {% endif %}
         {% endwith %}
-        {% block content %}{% endblock %}
+        {% block content %}{% endblock %} <!-- Content block for page-specific content -->
     </main>
     
     <!-- JavaScript for toggle visibility -->
@@ -39,11 +43,11 @@
         function toggleVisibility(elementId) {
             const element = document.getElementById(elementId);
             if (element) {
-                element.classList.toggle('hidden');
+                element.classList.toggle('hidden'); // Toggle the 'hidden' class to show/hide elements
             }
         }
     </script>
 
-    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script> <!-- Link to additional JavaScript file -->
 </body>
 </html>

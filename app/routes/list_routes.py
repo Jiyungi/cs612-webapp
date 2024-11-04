@@ -8,6 +8,7 @@ list_bp = Blueprint('list', __name__)
 
 @list_bp.route('/dashboard')
 @login_required
+# Route to display the user's dashboard with all lists and tasks
 def dashboard():
     """Retrieve todo lists with their associated top-level tasks for the dashboard view."""
     # Retrieve lists and their tasks, loading only for the current user
@@ -27,6 +28,7 @@ def dashboard():
 
 @list_bp.route('/add_list', methods=['GET', 'POST'])
 @login_required
+# Route to add a new todo list
 def add_list():
     """Add a new list for the current user."""
     form = AddListForm()

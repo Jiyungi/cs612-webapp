@@ -6,15 +6,19 @@
 <h2>Your Todo Lists</h2>
 <div class="list-container">
     {% for todo_list in todo_lists %}
+        <!-- Container for each todo list -->
         <div class="list-box" ondrop="drop(event, {{ todo_list.id }})" ondragover="allowDrop(event)">
             <div class="list-header">
+                <!-- List name with toggle for task visibility -->
                 <span onclick="toggleVisibility('list-{{ todo_list.id }}-tasks')" style="cursor: pointer;">
                     {{ todo_list.name }}
                 </span>
+                <!-- Button to toggle list actions -->
                 <button type="button" class="action-btn" onclick="toggleVisibility('list-{{ todo_list.id }}-actions')" aria-label="Toggle List Actions">
                     <i class="fas fa-ellipsis-v"></i>
                 </button>
                 
+                <!-- Actions for renaming and deleting the list -->
                 <div id="list-{{ todo_list.id }}-actions" class="list-actions hidden">
                     <form action="{{ url_for('list.delete_list', list_id=todo_list.id) }}" method="POST" style="display:inline;">
                         {{ form.hidden_tag() }}
@@ -32,6 +36,7 @@
                 </div>
             </div>
 
+            <!-- Form to add a new task to the list -->
             <form action="{{ url_for('task.add_task', list_id=todo_list.id) }}" method="POST">
                 {{ form.hidden_tag() }}
                 <input type="text" name="task_name" placeholder="New Task" required>
@@ -40,17 +45,23 @@
                 </button>
             </form>
 
+            <!-- List of tasks within the todo list -->
             <ul id="list-{{ todo_list.id }}-tasks" class="task-list hidden">
                 {% for task in todo_list.top_level_tasks %}
+                    <!-- Each task is draggable for reordering -->
                     <li id="task-{{ task.id }}" draggable="true" ondragstart="drag(event)">
                         <div class="task-header">
+                            <!-- Checkbox to mark task as complete -->
                             <input type="checkbox" onchange="toggleTaskComplete({{ task.id }}, this.checked)" {% if task.is_completed %}checked{% endif %}>
+                            <!-- Task name with toggle for subtask visibility -->
                             <span onclick="toggleVisibility('task-{{ task.id }}-subtasks')" style="cursor: pointer;">{{ task.name }}</span>
+                            <!-- Button to toggle task actions -->
                             <button type="button" class="toggle-btn" onclick="toggleVisibility('task-{{ task.id }}-actions')" aria-label="Toggle Task Actions">
                                 <i class="fas fa-ellipsis-h"></i>
                             </button>
                         </div>
                         
+                        <!-- Actions for renaming and deleting the task -->
                         <div id="task-{{ task.id }}-actions" class="task-actions hidden">
                             <form action="{{ url_for('task.delete_task', task_id=task.id) }}" method="POST" style="display:inline;">
                                 {{ form.hidden_tag() }}
@@ -67,6 +78,7 @@
                             </form>
                         </div>
 
+                        <!-- Form to add a new subtask to the task -->
                         <form action="{{ url_for('subtask.add_subtask', task_id=task.id) }}" method="POST">
                             {{ form.hidden_tag() }}
                             <input type="text" name="title" placeholder="New Subtask" required>
@@ -75,15 +87,20 @@
                             </button>
                         </form>
 
+                        <!-- List of subtasks within the task -->
                         <ul id="task-{{ task.id }}-subtasks" class="subtask-list hidden">
                             {% for subtask in task.subtasks %}
                                 <li id="subtask-{{ subtask.id }}">
+                                    <!-- Checkbox to mark subtask as complete -->
                                     <input type="checkbox" onchange="toggleTaskComplete({{ subtask.id }}, this.checked)" {% if subtask.is_completed %}checked{% endif %}>
+                                    <!-- Subtask name with toggle for sub-subtask visibility -->
                                     <span onclick="toggleVisibility('subtask-{{ subtask.id }}-subsubtasks')" style="cursor: pointer;">{{ subtask.name }}</span>
+                                    <!-- Button to toggle subtask actions -->
                                     <button type="button" class="toggle-btn" onclick="toggleVisibility('subtask-{{ subtask.id }}-actions')" aria-label="Toggle Subtask Actions">
                                         <i class="fas fa-ellipsis-h"></i>
                                     </button>
                                     
+                                    <!-- Actions for renaming and deleting the subtask -->
                                     <div id="subtask-{{ subtask.id }}-actions" class="subtask-actions hidden">
                                         <form action="{{ url_for('subtask.rename_subtask', subtask_id=subtask.id) }}" method="POST" style="display:inline;">
                                             {{ form.hidden_tag() }}
@@ -109,15 +126,19 @@
                                         </button>
                                     </form>
 
+                                    <!-- List of sub-subtasks within the subtask -->
                                     <ul id="subtask-{{ subtask.id }}-subsubtasks" class="subtask-list hidden">
                                         {% for sub_subtask in subtask.subtasks %}
                                             <li id="sub-subtask-{{ sub_subtask.id }}">
+                                                <!-- Checkbox to mark sub-subtask as complete -->
                                                 <input type="checkbox" onchange="toggleTaskComplete({{ sub_subtask.id }}, this.checked)" {% if sub_subtask.is_completed %}checked{% endif %}>
                                                 {{ sub_subtask.name }}
+                                                <!-- Button to toggle sub-subtask actions -->
                                                 <button type="button" class="toggle-btn" onclick="toggleVisibility('sub-subtask-{{ sub_subtask.id }}-actions')" aria-label="Toggle Sub-subtask Actions">
                                                     <i class="fas fa-ellipsis-h"></i>
                                                 </button>
                                                 
+                                                <!-- Actions for renaming and deleting the sub-subtask -->
                                                 <div id="sub-subtask-{{ sub_subtask.id }}-actions" class="subtask-actions hidden">
                                                     <form action="{{ url_for('subtask.rename_subtask', subtask_id=sub_subtask.id) }}" method="POST" style="display:inline;">
                                                         {{ form.hidden_tag() }}
@@ -149,6 +170,7 @@
     <i class="fas fa-plus"></i> Add New List
 </a>
 
+<!-- JavaScript functions for task management -->
 <script>
     const csrfToken = "{{ csrf_token() }}";
 
@@ -159,6 +181,7 @@
         }
     }
 
+    // Toggle task completion status
     function toggleTaskComplete(taskId, isCompleted) {
         fetch(`/task/${taskId}/toggle_complete`, {
             method: 'POST',
@@ -208,14 +231,17 @@
         });
     }
 
+    // Allow drop event for drag-and-drop functionality
     function allowDrop(event) {
         event.preventDefault();
     }
 
+    // Set data for drag event
     function drag(event) {
         event.dataTransfer.setData("text/plain", event.target.id);
     }
 
+    // Handle drop event to move tasks between lists
     function drop(event, listId) {
         event.preventDefault();
         const taskId = event.dataTransfer.getData("text/plain").split('-')[1];
@@ -244,6 +270,7 @@
     }
 </script>
 
+<!-- CSS styles for the dashboard -->
 <style>
     .hidden { display: none; }
     .list-container { display: flex; flex-wrap: wrap; gap: 20px; }

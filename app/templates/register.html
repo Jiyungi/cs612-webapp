@@ -5,20 +5,20 @@
 {% block content %}
 <h2>Register</h2>
 <form method="POST" onsubmit="return validateForm()">
-    {{ form.hidden_tag() }} <!-- This includes the CSRF token -->
-    <label>Username:</label><br>
-    <input type="text" name="username" required maxlength="150" placeholder="Username"><br>
-    <label>Password:</label><br>
-    <input type="password" name="password" required placeholder="Password"><br>
-    <label>Confirm Password:</label><br>
-    <input type="password" name="confirm_password" required placeholder="Confirm Password"><br><br>
-    <button type="submit">Register</button>
+    {{ form.hidden_tag() }} <!-- This includes the CSRF token for form security -->
+    <label>Username:</label><br> <!-- Label for the username input field -->
+    <input type="text" name="username" required maxlength="150" placeholder="Username"><br> <!-- Input field for the username with a maximum length -->
+    <label>Password:</label><br> <!-- Label for the password input field -->
+    <input type="password" name="password" required placeholder="Password"><br> <!-- Input field for the password -->
+    <label>Confirm Password:</label><br> <!-- Label for the confirm password input field -->
+    <input type="password" name="confirm_password" required placeholder="Confirm Password"><br><br> <!-- Input field for confirming the password -->
+    <button type="submit">Register</button> <!-- Submit button for the form -->
 </form>
 
 <script>
 function validateForm() {
     // Add custom validation logic here if needed
-    return true;
+    return true; // Currently, the form always returns true, allowing submission
 }
 </script>
 {% endblock %}
